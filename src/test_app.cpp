@@ -43,25 +43,27 @@ struct TestApp: public pe::App {
             .add_animation({{2, 0.1f}})
             .set_active(0);
         player.add<BoxCollider>(glm::vec2(27,36));
-        player.add<Rigidbody>(100.f).set_gravity(false);//.add_force(glm::vec2{0,100});
+        player.add<Rigidbody>(1.f).set_gravity(false);//.add_force(glm::vec2{0,100});
         player.add<Player>(player);
 
         // auto block_spawner = scene.create_entity();
         // block_spawner.add<Transform>(glm::vec2{200, 200});
 
 
-        auto bouncer = scene.create_entity();
-        bouncer.add<Transform>(glm::vec2{200, 200});
-        bouncer.add<RectRender>(sf::RectangleShape(sf::Vector2f(30,30)));
-        auto& body1 = bouncer.add<Rigidbody>(1.f).set_gravity(true);
-        body1.restitution = 1.f;
-        // body.velocity = {0.f, 10.f};
-        bouncer.add<BoxCollider>(glm::vec2(30,30));
+        // auto bouncer = scene.create_entity();
+        // bouncer.add<Transform>(glm::vec2{200, 200});
+        // bouncer.add<RectRender>(sf::RectangleShape(sf::Vector2f(30,30)));
+        // auto& body1 = bouncer.add<Rigidbody>(1.f).set_gravity(false);
+        // body1.velocity = {0,40};
+        // body1.restitution = 0.f;
+        // // body.velocity = {0.f, 10.f};
+        // bouncer.add<BoxCollider>(glm::vec2(30,30));
 
         auto plane = scene.create_entity();
         plane.add<Transform>(glm::vec2{200, 300});
         plane.add<RectRender>(sf::RectangleShape(sf::Vector2f(100,40)));
         auto& body2 = plane.add<Rigidbody>(1.f).set_gravity(false);
+        body2.restitution = 0.f;
         plane.add<BoxCollider>(glm::vec2(100,40));
     }
     

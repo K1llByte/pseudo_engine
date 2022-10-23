@@ -46,22 +46,26 @@ struct BoxCollider {
     }
     // on_colision callback
 
-    
+
     static void resolve_collision(Rigidbody& a, Rigidbody& b, const glm::vec2& collision_normal) {
         // Minimum restitution (simple approach)
         auto e = std::min(a.restitution, b.restitution);
 
         // Relative velocity
         auto vrel = a.velocity - b.velocity;
+        fmt::print("normal: {}, {}\n", collision_normal.x, collision_normal.y);
+        fmt::print("vrel: {}, {}\n", vrel.x, vrel.y);
 
         // Compute impulse magnitude
         float impulse_magnitude = -(1 + e) * glm::dot(vrel, collision_normal) / ((1/a.mass) + (1/b.mass));
+        fmt::print("impulse_magnitude: {}\n", impulse_magnitude);
 
         // Apply collision impulse
         auto collision_impulse = impulse_magnitude * collision_normal;
         
-        a.apply_impulse(collision_impulse);
-        b.apply_impulse(-collision_impulse);
+        fmt::print("collision_impulse: {},{}\n", collision_impulse.x, collision_impulse.y);
+        a.apply_impulse(-collision_impulse);
+        b.apply_impulse(collision_impulse);
     }
     
 };
