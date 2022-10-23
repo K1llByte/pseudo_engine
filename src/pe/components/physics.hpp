@@ -61,7 +61,7 @@ struct BoxCollider {
         auto collision_impulse = impulse_magnitude * collision_normal;
         
         a.apply_impulse(collision_impulse);
-        // b.apply_impulse(-collision_impulse);
+        b.apply_impulse(-collision_impulse);
     }
     
 };

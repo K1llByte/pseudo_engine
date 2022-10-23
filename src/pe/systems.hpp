@@ -105,23 +105,6 @@ namespace pe {
     };
 
 
-    struct MovementSystem: public System {
-        MovementSystem(pe::Scene& _scene, sf::RenderWindow& _win)
-            : System(_scene,_win) {}
-
-        void update(float dt) override {
-            static auto view = scene.view<Transform, MovementController>();
-            view.each([&](auto& t, auto& m) {
-                float SPEED = 100.f + 150.f * sf::Keyboard::isKeyPressed(m.sprint);
-                const float x_speed = dt * (sf::Keyboard::isKeyPressed(m.right) * SPEED - sf::Keyboard::isKeyPressed(m.left) * SPEED);
-                const float y_speed = dt * (sf::Keyboard::isKeyPressed(m.down)  * SPEED - sf::Keyboard::isKeyPressed(m.up)  * SPEED);
-                t.position.x += x_speed;
-                t.position.y += y_speed;
-            });
-        }
-    };
-
-
     struct PhysicsSystem: public System {
         PhysicsSystem(pe::Scene& _scene, sf::RenderWindow& _win)
             : System(_scene,_win) {}
@@ -156,47 +139,104 @@ namespace pe {
                             // TODO: Compute collision normal
                             glm::vec2 collision_normal = glm::normalize(t1.position - t2.position);
                             // Restore collision positioning
-                            // Collision intersection size
-                            glm::vec2 cis;
-                            // FIXME: Branchless programming here pls
-                            const auto v1 = body1_ptr->velocity;
-                            const auto v2 = body2_ptr->velocity;
+                            // glm::vec2 cis;
+                            auto& v1 = body1_ptr->velocity;
+                            auto& v2 = body2_ptr->velocity;
                             float factor1x = (v1.x + v2.x) ? v1.x / (v1.x + v2.x) : 0.f;
                             float factor1y = (v1.y + v2.y) ? v1.y / (v1.y + v2.y) : 0.f;
-                            float factor2x = (v1.x + v2.x) ? v2.x / (v1.x + v2.x) : 0.f;
-                            float factor2y = (v1.y + v2.y) ? v2.y / (v1.y + v2.y) : 0.f;
-                            if(t1.position.x < t2.position.x) {
-                                cis.x = glm::abs((t1.position.x + c1.size.x / 2) - (t2.position.x - c2.size.x / 2));
-                                t1.position.x -= factor1x * cis.x;
-                                t2.position.x += factor2x * cis.x;
-                            }
-                            else { // if t1.x >= t2.x
-                                cis.x = glm::abs((t1.position.x - c1.size.x / 2) - (t2.position.x + c2.size.x / 2));
-                                t1.position.x += factor1x * cis.x;
-                                t2.position.x -= factor2x * cis.x;
-                            }
-                            if(t1.position.y < t2.position.y) {
-                                cis.y = glm::abs((t1.position.y + c1.size.y / 2) - (t2.position.y - c2.size.y / 2));
-                                t1.position.y -= factor1y * cis.y;
-                                t2.position.y += factor2y * cis.y;
-                            }
-                            else { // if t1.y >= t2.y
-                                cis.y = glm::abs((t1.position.y - c1.size.y / 2) - (t2.position.y + c2.size.y / 2));
-                                t1.position.y += factor1y * cis.y;
-                                t2.position.y -= factor2y * cis.y;
-                            }
+                            float factor2x = 1.f - factor1x;
+                            float factor2y = 1.f - factor2x;
+                            // DISPLACEMENT SOLVER 1 //
+                            // if(t1.position.x < t2.position.x) {
+                            //     cis.x = glm::abs((t1.position.x + c1.size.x / 2) - (t2.position.x - c2.size.x / 2));
+                            //     t1.position.x -= factor1x * cis.x;
+                            //     t2.position.x += factor2x * cis.x;
+                            // }
+                            // else { // if t1.x >= t2.x
+                            //     cis.x = glm::abs((t1.position.x - c1.size.x / 2) - (t2.position.x + c2.size.x / 2));
+                            //     t1.position.x += factor1x * cis.x;
+                            //     t2.position.x -= factor2x * cis.x;
+                            // }
+
+                            // if(t1.position.y < t2.position.y) {
+                            //     cis.y = glm::abs((t1.position.y + c1.size.y / 2) - (t2.position.y - c2.size.y / 2));
+                            //     t1.position.y -= factor1y * cis.y;
+                            //     t2.position.y += factor2y * cis.y;
+                            // }
+                            // else { // if t1.y >= t2.y
+                            //     cis.y = glm::abs((t1.position.y - c1.size.y / 2) - (t2.position.y + c2.size.y / 2));
+                            //     t1.position.y += factor1y * cis.y;
+                            //     t2.position.y -= factor2y * cis.y;
+                            // }
+
                             
+
+                            // DISPLACEMENT SOLVER 2 //
+                            // Collision intersection size
+                            glm::vec2 cis {
+                                (t1.position.x < t2.position.x)
+                                    ? (t1.position.x + c1.size.x / 2) - (t2.position.x - c2.size.x / 2)
+                                    : (t2.position.x + c2.size.x / 2) - (t1.position.x - c1.size.x / 2),
+                                (t1.position.y < t2.position.y)
+                                    ? (t1.position.y + c1.size.y / 2) - (t2.position.y - c2.size.y / 2)
+                                    : (t2.position.y + c2.size.y / 2) - (t1.position.y - c1.size.y / 2)
+                            };
+
+                            // fmt::print("t1.pos: {},{}\n", t1.position.x, t1.position.y);
+                            // fmt::print("t2.pos: {},{}\n", t2.position.x, t2.position.y);
+                            // fmt::print("c1.size: {},{}\n", c1.size.x, c1.size.y);
+
+                            // cis.x = (cis.x == NAN || cis.x == -NAN) ? 0.f : cis.x;
+                            // cis.y = (cis.y == NAN || cis.y == -NAN) ? 0.f : cis.y;
+
+                            // // auto nv1 = glm::clamp(glm::normalize(v1), glm::vec2{0.f}, glm::vec2{1.f});
+                            auto nv1 = glm::normalize(v1);
+                            auto nv2 = glm::normalize(v2);
+                            auto nv1x = (nv1.x != nv1.x) ? 0.f : nv1.x;
+                            auto nv1y = (nv1.y != nv1.y) ? 0.f : nv1.y;
+                            auto nv2x = (nv2.x != nv2.x) ? 0.f : nv2.x;
+                            auto nv2y = (nv2.y != nv2.y) ? 0.f : nv2.y;
+
+                            // fmt::print("{},{}\n", cis.x, cis.y);
+                            t1.position.x -= nv1x * std::min(cis.x,cis.y);
+                            t1.position.y -= nv1y * std::min(cis.x,cis.y);
+                            t2.position.x -= nv2x * std::min(cis.x,cis.y);
+                            t2.position.y -= nv2y * std::min(cis.x,cis.y);
+                            
+                            // RESTITUTION IMPULSE SOLVER 1 //
                             // TODO: Call restitution impulse solver
                             // BoxCollider::resolve_collision(*body1_ptr, *body2_ptr, collision_normal);
 
-                            // DEBUG:
-                            // body1_ptr->velocity = glm::vec2{0.f};
-                            // body2_ptr->velocity = glm::vec2{0.f};
-                            // body1_ptr->force = glm::vec2{0.f};
-                            // body2_ptr->force = glm::vec2{0.f};
-                            // body1_ptr->gravity = false;
-                            // body2_ptr->gravity = false;
-                        }                        
+                            // TEMPORARY RESTITUTION IMPULSE SOLVER 2 //
+                            // TODO: Compute normal
+                            glm::vec2 compass[] = {
+                                glm::vec2(0.0f, 1.0f),	// down
+                                glm::vec2(1.0f, 0.0f),	// right
+                                glm::vec2(0.0f, -1.0f),	// up
+                                glm::vec2(-1.0f, 0.0f)	// left
+                            };
+                            float max = 0.0f;
+                            size_t best_match = -1;
+                            auto target = glm::vec2{nv1x,nv1y};
+                            for(size_t i = 0; i < 4; i++) {
+                                float dot_product = glm::dot(target, compass[i]);
+                                if(dot_product > max) {
+                                    max = dot_product;
+                                    best_match = i;
+                                }
+                            }
+                            assert(best_match != -1 || "Impossible");
+                            auto normal = compass[best_match];
+                            BoxCollider::resolve_collision(*body1_ptr, *body2_ptr, normal);
+                            // // Relative velocity
+                            // glm::vec2 vrel = v1 - v2;
+                            // fmt::print("{},{}\n", vrel.x, vrel.y);
+                            // float magnitude = -glm::dot(vrel, normal);
+                            // fmt::print("{}\n", magnitude);
+                            // auto collision_impulse = normal * magnitude;
+                            // v1 += collision_impulse;
+                            // v2 -= collision_impulse;
+                        }
 
                         // Draw collision bounding boxes
                         sf::RectangleShape bb1(sf::Vector2f(c1.size.x,c1.size.y));

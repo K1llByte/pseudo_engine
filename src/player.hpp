@@ -16,6 +16,7 @@ class Player: public pe::Actor {
     // ECS Related
     pe::Entity    entity;
     Transform*    transform;
+    Rigidbody*    rigidbody;
     SpriteRender* sprite_render;
     SpriteAnimator* sprite_animator;
 
@@ -31,6 +32,7 @@ class Player: public pe::Actor {
         , transform{&entity.get<Transform>()}
         , sprite_render{&entity.get<SpriteRender>()}
         , sprite_animator{&entity.get<SpriteAnimator>()}
+        , rigidbody{&entity.get<Rigidbody>()}
         {}
 
     void update(float dt) override {
@@ -39,10 +41,11 @@ class Player: public pe::Actor {
         ////////////////////////////
         is_running = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
         float SPEED = 100.f + 150.f * is_running;
-        const float x_speed = dt * (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) * SPEED - sf::Keyboard::isKeyPressed(sf::Keyboard::Left) * SPEED);
-        const float y_speed = dt * (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)  * SPEED - sf::Keyboard::isKeyPressed(sf::Keyboard::Up)  * SPEED);
-        transform->position.x += x_speed;
-        transform->position.y += y_speed;
+        const float x_speed = sf::Keyboard::isKeyPressed(sf::Keyboard::Right) * SPEED - sf::Keyboard::isKeyPressed(sf::Keyboard::Left) * SPEED;
+        const float y_speed = sf::Keyboard::isKeyPressed(sf::Keyboard::Down)  * SPEED - sf::Keyboard::isKeyPressed(sf::Keyboard::Up)  * SPEED;
+        rigidbody->velocity = glm::vec2{x_speed, y_speed};
+        // transform->position.x += x_speed;
+        // transform->position.y += y_speed;
         if(x_speed < 0) direction_right = false;
         if(x_speed > 0) direction_right = true;
         idle = !(x_speed || y_speed);
@@ -60,14 +63,5 @@ class Player: public pe::Actor {
             // 1 is Walking, 2 is Running
             sprite_animator->set_active(1 + is_running);
         }
-
-        // if(state.is<Idle>()) {
-        //     // 0 is Idle, 3 is Emote
-        //     sprite_animator->set_active(3*state.is<Emote>());
-        // }
-        // else {
-        //     // 1 is Walking, 2 is Running
-        //     sprite_animator->set_active(1 + state.is<Running>());
-        // }
     }
 };

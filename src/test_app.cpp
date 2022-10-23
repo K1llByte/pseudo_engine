@@ -6,19 +6,18 @@
 #include "player.hpp"
 #include "spawner.hpp"
 
-struct BitMayhem: public pe::App {
+struct TestApp: public pe::App {
     pe::Scene scene;
     // Systems
     pe::SystemGroup<
         pe::ScriptSystem,
         pe::AnimationSystem,
         pe::RenderSystem,
-        pe::MovementSystem,
         pe::PhysicsSystem
     > systems;
-
-    BitMayhem() 
-        : App(sf::VideoMode(800,800), "Bit Mayhem")
+    
+    TestApp() 
+        : App(sf::VideoMode(800,800), "Test App")
         , systems(scene, window)
     {
         // auto camera = create_camera(scene, 0,0,300,300);
@@ -29,23 +28,23 @@ struct BitMayhem: public pe::App {
         scene.set_main_camera(camera);
         
         // Player
-        // auto player = scene.create_entity();
-        // player.add<Transform>(glm::vec2{300, 300});
-        // player.add<SpriteRender>("assets/textures/monkey_tileset_16.png",40.f,40.f);
-        // // player.add<MovementController>();
-        // player.add<SpriteAnimator>(64,48,4,3)
-        //     // 0: Idle
-        //     .add_animation({{0, 0.1f}, {1, 0.1f}})
-        //     // 1: Walking
-        //     .add_animation({{4,0.1f}, {5,0.1f}, {6,0.1f}, {7,0.1f}})
-        //     // 2: Running
-        //     .add_animation({{8,0.1f}, {9,0.1f}, {10,0.1f}, {11,0.1f}})
-        //     // 3: Emote
-        //     .add_animation({{2, 0.1f}})
-        //     .set_active(0);
-        // player.add<Player>(player);
-        // player.add<BoxCollider>(glm::vec2(27,36));
-        // // player.add<Rigidbody>(100.f).set_gravity(true);//.add_force(glm::vec2{0,100});
+        auto player = scene.create_entity();
+        player.add<Transform>(glm::vec2{300, 300});
+        player.add<SpriteRender>("assets/textures/monkey_tileset_16.png",40.f,40.f);
+        // player.add<MovementController>();
+        player.add<SpriteAnimator>(64,48,4,3)
+            // 0: Idle
+            .add_animation({{0, 0.1f}, {1, 0.1f}})
+            // 1: Walking
+            .add_animation({{4,0.1f}, {5,0.1f}, {6,0.1f}, {7,0.1f}})
+            // 2: Running
+            .add_animation({{8,0.1f}, {9,0.1f}, {10,0.1f}, {11,0.1f}})
+            // 3: Emote
+            .add_animation({{2, 0.1f}})
+            .set_active(0);
+        player.add<BoxCollider>(glm::vec2(27,36));
+        player.add<Rigidbody>(100.f).set_gravity(false);//.add_force(glm::vec2{0,100});
+        player.add<Player>(player);
 
         // auto block_spawner = scene.create_entity();
         // block_spawner.add<Transform>(glm::vec2{200, 200});
@@ -71,4 +70,4 @@ struct BitMayhem: public pe::App {
     }
 };
 
-PE_APP_MAIN(BitMayhem)
+PE_APP_MAIN(TestApp)
